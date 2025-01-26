@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { parse } = require('csv-parse');
 
-const habitablePLanets = [];
+// Mongoose Planets Model
+const planets = require('./planets.mongo');
 
 const isHabitablePlanet = (planet) => {
     return planet['koi_disposition'] === 'CONFIRMED'
@@ -13,26 +14,47 @@ const isHabitablePlanet = (planet) => {
 function loadPlanetsData() {
     return new Promise((resolve, reject) => {
         fs.createReadStream(path.join(__dirname, '..', '..', 'data', 'kepler_data.csv'))
-        .pipe(parse({
-            comment: '#',
-            columns: true,
-        }))
-        .on('data', (planet) => {
-            if (isHabitablePlanet(planet)) habitablePLanets.push(planet);
-        })
-        .on('error', (err) => {
-            console.log(err);
-            reject(err);
-        })
-        .on('end', () => {
-            console.log(`${habitablePLanets.length} habitable planets found!`);
-            resolve();
-        });
+            .pipe(parse({
+                comment: '#',
+                columns: true,
+            }))
+            .on('data', async (planet) => {
+                if (isHabitablePlanet(planet)) {
+                    savePlanet(planet);
+                }
+            })
+            .on('error', (err) => {
+                console.log(err);
+                reject(err);
+            })
+            .on('end', async () => {
+                const planetsFoundCount = (await getAllPlanets()).length;
+                console.log(`${planetsFoundCount} habitable planets found!`);
+                resolve();
+            });
     });
 }
 
-function getAllPlanets() {
-    return habitablePLanets
+async function getAllPlanets() {
+    return await planets.find({}, {
+        '__v': 0,
+        '_id': 0,
+    });
+}
+
+async function savePlanet(planet) {
+    // insert + update = upsert
+    try {
+        await planets.updateOne({
+            keplerName: planet.kepler_name,
+        }, {
+            keplerName: planet.kepler_name,
+        }, {
+            upsert: true,
+        });
+    } catch (err) {
+        console.error(`Could not save planet ${err}`);
+    }
 }
 
 
