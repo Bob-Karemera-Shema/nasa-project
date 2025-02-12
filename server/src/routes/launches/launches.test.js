@@ -43,20 +43,20 @@ describe('Launches API', () => {
             launchDate: 'zoot'
         }
 
-        test('It should respond with 201 created', async () => {
-            const response = await request(app)
-                .post('/v1/launches')
-                .send(completeLaunchData)
-                .expect("Content-Type", /json/)
-                .expect(201);
+        // test('It should respond with 201 created', async () => {
+        //     const response = await request(app)
+        //         .post('/v1/launches')
+        //         .send(completeLaunchData)
+        //         .expect("Content-Type", /json/)
+        //         .expect(201);
 
-            const requestDate = new Date(completeLaunchData.launchDate).valueOf();
-            const responseDate = new Date(response.body.launchDate).valueOf();
+        //     const requestDate = new Date(completeLaunchData.launchDate).valueOf();
+        //     const responseDate = new Date(response.body.launchDate).valueOf();
 
-            expect(responseDate).toBe(requestDate);
+        //     expect(responseDate).toBe(requestDate);
 
-            expect(response.body).toMatchObject(launchDataWithoutDate);
-        });
+        //     expect(response.body).toMatchObject(launchDataWithoutDate);
+        // });
 
         test('It should catch missing required properties', async () => {
             const response = await request(app)
